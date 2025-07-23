@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UrbanTrends804 Profit Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 30px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    h2 {
+      font-size: 20px;
+      margin-top: 10px;
+    }
+    input {
+      padding: 5px;
+      margin: 5px;
+    }
+    button {
+      padding: 6px 12px;
+      margin: 10px;
+    }
+    .section {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin: 15px auto;
+      width: 320px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>UrbanTrends804</h1>
+  <h2>Profit Margin Calculator (After 35.9% Fee)</h2>
+
+  <div class="section">
+    <h3>Calculate Max Buy Price</h3>
+    <label>Sale Price ($):</label><br>
+    <input type="number" id="salePrice" step="0.01"><br>
+
+    <label>Desired Profit Margin (%):</label><br>
+    <input type="number" id="profitMargin1" step="0.01"><br>
+
+    <button onclick="calculateBuyPrice()">Calculate Max Buy Price</button>
+
+    <div id="result1"></div>
+  </div>
+
+  <div class="section">
+    <h3>Calculate Required Sale Price</h3>
+    <label>Buy Price ($):</label><br>
+    <input type="number" id="buyPrice" step="0.01"><br>
+
+    <label>Desired Profit Margin (%):</label><br>
+    <input type="number" id="profitMargin2" step="0.01"><br>
+
+    <button onclick="calculateSellPrice()">Calculate Sale Price Needed</button>
+
+    <div id="result2"></div>
+  </div>
+
+  <script>
+    const feeRate = 0.359;
+
+    function calculateBuyPrice() {
+      const salePrice = parseFloat(document.getElementById("salePrice").value);
+      const profitMargin = parseFloat(document.getElementById("profitMargin1").value) / 100;
+
+      if (isNaN(salePrice) || isNaN(profitMargin)) {
+        document.getElementById("result1").innerText = "Enter valid numbers.";
+        return;
+      }
+
+      const netAfterFees = salePrice * (1 - feeRate);
+      const desiredProfit = netAfterFees * profitMargin;
+      const maxBuyPrice = netAfterFees - desiredProfit;
+
+      document.getElementById("result1").innerHTML = `
+        <br>Sale Price: $${salePrice.toFixed(2)}<br>
+        Total Fees (35.9%): $${(salePrice * feeRate).toFixed(2)}<br>
+        Net After Fees: $${netAfterFees.toFixed(2)}<br>
+        Desired Profit: $${desiredProfit.toFixed(2)}<br>
+        <strong>Max Buy Price:</strong> $${maxBuyPrice.toFixed(2)}
+      `;
+    }
+
+    function calculateSellPrice() {
+      const buyPrice = parseFloat(document.getElementById("buyPrice").value);
+      const profitMargin = parseFloat(document.getElementById("profitMargin2").value) / 100;
+
+      if (isNaN(buyPrice) || isNaN(profitMargin)) {
+        document.getElementById("result2").innerText = "Enter valid numbers.";
+        return;
+      }
+
+      const targetNet = buyPrice * (1 + profitMargin);
+      const salePriceNeeded = targetNet / (1 - feeRate);
+
+      document.getElementById("result2").innerHTML = `
+        <br>Buy Price: $${buyPrice.toFixed(2)}<br>
+        Desired Profit: $${(buyPrice * profitMargin).toFixed(2)}<br>
+        Net Needed After Fees: $${targetNet.toFixed(2)}<br>
+        <strong>Sale Price Needed:</strong> $${salePriceNeeded.toFixed(2)}
+      `;
+    }
+  </script>
+
+</body>
+</html>
+
