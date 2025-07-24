@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,104 +13,183 @@
       font-size: 24px;
       font-weight: bold;
     }
-    h2 {
-      font-size: 20px;
-      margin-top: 10px;
-    }
-    input {
-      padding: 5px;
-      margin: 5px;
-    }
-    button {
-      padding: 6px 12px;
-      margin: 10px;
-    }
     .section {
       border: 1px solid #ccc;
       padding: 15px;
       margin: 15px auto;
-      width: 320px;
+      width: 340px;
       border-radius: 8px;
+    }
+    input, select {
+      padding: 6px;
+      margin: 5px;
+      width: 90%;
+    }
+    button {
+      padding: 6px 12px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
   <h1>UrbanTrends804</h1>
-  <h2>Profit Margin Calculator (After 35.9% Fee)</h2>
+  <h2>eBay Profit Calculator (13.6% + promo + $0.40)</h2>
 
   <div class="section">
-    <h3>Calculate Max Buy Price</h3>
-    <label>Sale Price ($):</label><br>
-    <input type="number" id="salePrice" step="0.01"><br>
+    <h3>Console Resale Estimator</h3>
+    <select id="systemDropdown" onchange="setMarketValue()">
+      <option value="">-- Select a Console --</option>
+      <option value="Xbox 360">Xbox 360</option>
+      <option value="Xbox One">Xbox One</option>
+      <option value="PS3">PlayStation 3</option>
+      <option value="PS4">PlayStation 4</option>
+      <option value="PS5">PlayStation 5</option>
+      <option value="Nintendo Switch">Nintendo Switch</option>
+      <option value="Wii U">Wii U</option>
+      <option value="Steam Deck">Steam Deck</option>
+      <option value="Meta Quest 2">Meta Quest 2</option>
+      <option value="Meta Quest 3">Meta Quest 3</option>
+      <option value="Custom">Custom</option>
+    </select><br>
 
-    <label>Desired Profit Margin (%):</label><br>
-    <input type="number" id="profitMargin1" step="0.01"><br>
+    <label>Estimated Market Value ($):</label><br>
+    <input type="number" id="marketValue"><br>
 
-    <button onclick="calculateBuyPrice()">Calculate Max Buy Price</button>
+    <label>Bundle Value Boost ($):</label><br>
+    <input type="number" id="bundleBoost" value="0" step="0.01"><br>
+
+    <label>Buy Price ($):</label><br>
+    <input type="number" id="buyPrice" step="0.01"><br>
+
+    <label>Shipping Cost ($):</label><br>
+    <input type="number" id="shippingCost" value="0" step="0.01"><br>
+
+    <label>Gas Cost ($):</label><br>
+    <input type="number" id="gasCost" value="0" step="0.01"><br>
+
+    <label>Desired Profit ($):</label><br>
+    <input type="number" id="profitDollar" step="0.01"><br>
+
+    <label>Promotion Rate (%):</label><br>
+    <input type="number" id="promoRate" value="0" step="0.1"><br>
+
+    <button onclick="calculateSalePrice()">Calculate Required Sale Price</button>
 
     <div id="result1"></div>
   </div>
 
   <div class="section">
-    <h3>Calculate Required Sale Price</h3>
-    <label>Buy Price ($):</label><br>
-    <input type="number" id="buyPrice" step="0.01"><br>
+    <h3>💰 Max Buy Price Estimator (Reversed)</h3>
+    <label>Sale Price ($):</label><br>
+    <input type="number" id="salePrice" step="0.01"><br>
 
-    <label>Desired Profit Margin (%):</label><br>
-    <input type="number" id="profitMargin2" step="0.01"><br>
+    <label>Shipping Cost ($):</label><br>
+    <input type="number" id="shippingCost2" value="0" step="0.01"><br>
 
-    <button onclick="calculateSellPrice()">Calculate Sale Price Needed</button>
+    <label>Gas Cost ($):</label><br>
+    <input type="number" id="gasCost2" value="0" step="0.01"><br>
+
+    <label>Desired Profit ($):</label><br>
+    <input type="number" id="profitDollar2" step="0.01"><br>
+
+    <label>Promotion Rate (%):</label><br>
+    <input type="number" id="promoRate2" value="0" step="0.1"><br>
+
+    <button onclick="calculateBuyPrice()">Calculate Max Buy Price</button>
 
     <div id="result2"></div>
   </div>
 
   <script>
-    const feeRate = 0.359;
+    const ebayBaseFeeRate = 13.6 / 100;
+    const fixedFee = 0.40;
+
+    const marketValues = {
+      "Xbox 360": 60,
+      "Xbox One": 150,
+      "PS3": 70,
+      "PS4": 170,
+      "PS5": 400,
+      "Nintendo Switch": 220,
+      "Wii U": 100,
+      "Steam Deck": 350,
+      "Meta Quest 2": 200,
+      "Meta Quest 3": 390
+    };
+
+    function setMarketValue() {
+      const selected = document.getElementById("systemDropdown").value;
+      const valueInput = document.getElementById("marketValue");
+      if (marketValues[selected]) {
+        valueInput.value = marketValues[selected];
+        valueInput.disabled = true;
+      } else {
+        valueInput.value = "";
+        valueInput.disabled = false;
+      }
+    }
+
+    function calculateSalePrice() {
+      const buyPrice = parseFloat(document.getElementById("buyPrice").value);
+      const profitTarget = parseFloat(document.getElementById("profitDollar").value);
+      const marketCap = parseFloat(document.getElementById("marketValue").value);
+      const bundleBoost = parseFloat(document.getElementById("bundleBoost").value) || 0;
+      const promoRate = parseFloat(document.getElementById("promoRate").value) / 100;
+      const shippingCost = parseFloat(document.getElementById("shippingCost").value) || 0;
+      const gasCost = parseFloat(document.getElementById("gasCost").value) || 0;
+
+      const totalFeeRate = ebayBaseFeeRate + promoRate;
+      const totalCost = buyPrice + shippingCost + gasCost;
+      const netNeeded = totalCost + profitTarget;
+      const requiredSalePrice = (netNeeded + fixedFee) / (1 - totalFeeRate);
+      const fees = requiredSalePrice * totalFeeRate + fixedFee;
+      const net = requiredSalePrice - fees;
+      const actualProfit = net - totalCost;
+      const adjustedMarketCap = marketCap + bundleBoost;
+
+      let resultHtml = `
+        <br><strong>Required Sale Price:</strong> $${requiredSalePrice.toFixed(2)}<br>
+        <strong>Total Cost (Buy + Ship + Gas):</strong> $${totalCost.toFixed(2)}<br>
+        <strong>Estimated Fees (incl promo):</strong> $${fees.toFixed(2)}<br>
+        <strong>Net After Fees:</strong> $${net.toFixed(2)}<br>
+        <strong>Projected Profit:</strong> $${actualProfit.toFixed(2)}<br>
+        <strong>Market Value Cap + Bundle:</strong> $${adjustedMarketCap.toFixed(2)}<br>
+      `;
+
+      if (requiredSalePrice > adjustedMarketCap) {
+        resultHtml += `<p style="color:red;"><strong>Warning:</strong> Price exceeds market value. Adjust target or cost.</p>`;
+      } else {
+        resultHtml += `<p style="color:green;"><strong>Good deal:</strong> Within resale range.</p>`;
+      }
+
+      document.getElementById("result1").innerHTML = resultHtml;
+    }
 
     function calculateBuyPrice() {
       const salePrice = parseFloat(document.getElementById("salePrice").value);
-      const profitMargin = parseFloat(document.getElementById("profitMargin1").value) / 100;
+      const profitTarget = parseFloat(document.getElementById("profitDollar2").value);
+      const promoRate = parseFloat(document.getElementById("promoRate2").value) / 100;
+      const shippingCost = parseFloat(document.getElementById("shippingCost2").value) || 0;
+      const gasCost = parseFloat(document.getElementById("gasCost2").value) || 0;
 
-      if (isNaN(salePrice) || isNaN(profitMargin)) {
-        document.getElementById("result1").innerText = "Enter valid numbers.";
-        return;
-      }
-
-      const netAfterFees = salePrice * (1 - feeRate);
-      const desiredProfit = netAfterFees * profitMargin;
-      const maxBuyPrice = netAfterFees - desiredProfit;
-
-      document.getElementById("result1").innerHTML = `
-        <br>Sale Price: $${salePrice.toFixed(2)}<br>
-        Total Fees (35.9%): $${(salePrice * feeRate).toFixed(2)}<br>
-        Net After Fees: $${netAfterFees.toFixed(2)}<br>
-        Desired Profit: $${desiredProfit.toFixed(2)}<br>
-        <strong>Max Buy Price:</strong> $${maxBuyPrice.toFixed(2)}
-      `;
-    }
-
-    function calculateSellPrice() {
-      const buyPrice = parseFloat(document.getElementById("buyPrice").value);
-      const profitMargin = parseFloat(document.getElementById("profitMargin2").value) / 100;
-
-      if (isNaN(buyPrice) || isNaN(profitMargin)) {
-        document.getElementById("result2").innerText = "Enter valid numbers.";
-        return;
-      }
-
-      const targetNet = buyPrice * (1 + profitMargin);
-      const salePriceNeeded = targetNet / (1 - feeRate);
+      const totalFeeRate = ebayBaseFeeRate + promoRate;
+      const fees = salePrice * totalFeeRate + fixedFee;
+      const net = salePrice - fees;
+      const additionalCosts = shippingCost + gasCost;
+      const maxBuyPrice = net - profitTarget - additionalCosts;
+      const profit = net - (maxBuyPrice + additionalCosts);
 
       document.getElementById("result2").innerHTML = `
-        <br>Buy Price: $${buyPrice.toFixed(2)}<br>
-        Desired Profit: $${(buyPrice * profitMargin).toFixed(2)}<br>
-        Net Needed After Fees: $${targetNet.toFixed(2)}<br>
-        <strong>Sale Price Needed:</strong> $${salePriceNeeded.toFixed(2)}
+        <br><strong>Sale Price:</strong> $${salePrice.toFixed(2)}<br>
+        <strong>Total Fees:</strong> $${fees.toFixed(2)}<br>
+        <strong>Net After Fees:</strong> $${net.toFixed(2)}<br>
+        <strong>Shipping + Gas Cost:</strong> $${additionalCosts.toFixed(2)}<br>
+        <strong>Max Buy Price:</strong> $${maxBuyPrice.toFixed(2)}<br>
+        <strong>Projected Profit:</strong> $${profit.toFixed(2)}
       `;
     }
   </script>
 
 </body>
 </html>
-
